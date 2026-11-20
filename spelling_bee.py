@@ -221,8 +221,7 @@ def print_words(words, center_letter, other_letters, fill):
         for letter in other_letters:
 
             if (
-                letter not in center_letter
-                or letter not in other_letters
+                letter not in word
             ): 
                 pangram = False
                 break
