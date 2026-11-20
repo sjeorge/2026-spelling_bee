@@ -17,17 +17,18 @@
      - can be written using the 7 given letters;
      - contain the center letter at least once.
 
-    the center letter at least once. Extra points are awarded for 'pangrams',
-    words that contain all 7 letters at least once.
+    Extra points are awarded for 'pangrams', words that contain all 7 letters at 
+    least once.
 
-    This script reads in the letters from a user input, and scans the Collins
-    Scrabble Dictionary (attached as 'US_Scrabble_words.txt') for all words 
-    fulfilling these requirements. These are then printed to the terminal.
+    This script reads in the letters from a user input, and scans a list of 
+    279,496 words taken from the Collins Scrabble Dictionary (attached as 
+    'US_Scrabble_words.txt') for all words fulfilling these requirements. These 
+    are then printed to the terminal and saved in a .txt file.
 
-    NOTE: there is no complete overlap between the Collins Scrabble Dictionary
-    and the word list used by the New York Times. Thus, the list found by this
-    script may be incomplete, or contain words (in particular, curse words) not 
-    accepted by the NYT.
+    NOTE: As a rule, the Collins Scrabble Dictionary is a lot more comprehensive
+    than the word list used by the New York Times. Thus, the list found by this
+    script likely contains words (in particular, curse words) not accepted by 
+    the NYT.
 
 '''
 
@@ -37,6 +38,7 @@
 import datetime
 from termcolor import colored as clr 
 
+# ==============================================================================
 # ==============================================================================
 
 def print_header(fill):
@@ -241,6 +243,29 @@ def print_words(words, center_letter, other_letters, fill):
     print( "\n" + fill*'=' + '\n' )
 
 # ==============================================================================
+
+def write_words(words, center_letter, other_letters):
+    '''
+        Write the found words to a .txt file.
+        Input:
+            words           list
+            center_letter   str
+            other_letters   str
+        Output:
+            None
+    '''
+
+    date = datetime.datetime.today().strftime("%Y-%m-%d")
+
+    with open(f"spelling_bee_{date}.txt", "w") as file:
+                    
+        file.write(f"center_letter {center_letter}")
+        
+        file.write(f"\nother_letters {other_letters}")
+        
+        for word in words: file.write(f"\n{word}")
+
+# ==============================================================================
 # ==============================================================================
 
 def main():
@@ -256,6 +281,8 @@ def main():
     words = find_words(center_letter, other_letters)
 
     print_words(words, center_letter, other_letters, fill)
+
+    write_words(words, center_letter, other_letters)
 
 # ==============================================================================    
 
