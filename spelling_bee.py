@@ -36,32 +36,32 @@
 # ==============================================================================
 
 import datetime
-from termcolor import colored as clr 
+from termcolor import cprint, colored as clr
 
 # ==============================================================================
 # ==============================================================================
 
-def print_header(fill):
+def print_header(width):
     '''
         Print output header with title and today's date
         Input: 
-            fill    int     width of horizontal bars
+            width   int     width of horizontal bars
         Output: 
             None
     '''
 
     date = datetime.datetime.today()
 
-    print( "\n" + fill*'=' )
+    cprint( '\n' + width*'=', "yellow")
 
     print(
-        clr("\nSPELLING BEE\n", 'yellow')
+        clr("\nSPELLING BEE \n", "yellow")
         + date.strftime("%A, %B ")
         + ordinal(date.strftime("%d"))
         + date.strftime(" %Y")
     )    
 
-    print( "\n" + fill*'=' )
+    cprint( '\n' + width*'=', "yellow" )
 
 # ==============================================================================
 
@@ -93,65 +93,84 @@ def user_input():
         Input: 
             None
         Output:
-            center_letter   str 
-            other_letter    str     
+            center_letter       str     
+            other_letters       str  
+            is_center_letter    dict    dict that has value True for the key 
+                                        corresponding to the center letter, and
+                                        False otherwise
+            is_other_letter     dict    dict that has value True for the keys 
+                                        corresponding to the other letters, and
+                                        False otherwise
     '''
 
-    center_letter = ''.join(
-        letter.upper()
-        for letter in input("\nToday\'s center letter: ")
-        if letter.isalpha()
-    )
+    alphabet = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
-    other_letters = ''.join(
-        letter.upper()
-        for letter in input("\nToday\'s other letters: ")
-        if letter.isalpha() and letter not in center_letter
-    )
+    center_letter = ''
+    is_center_letter = dict(zip(alphabet, [False]*26))
 
-    return center_letter, other_letters
+    for letter in input("\nToday\'s center letter: "):
+
+        if letter.isalpha(): 
+
+            center_letter += letter.upper()
+            is_center_letter[letter.upper()] = True
+
+    other_letters = ''
+    is_other_letter = dict(zip(alphabet, [False]*26))
+
+    for letter in input("\nToday\'s other letters: "):
+
+        if(
+            letter.isalpha() 
+            and not is_center_letter[letter.upper()]
+        ):
+
+            other_letters += letter.upper()
+            is_other_letter[letter.upper()] = True
+
+    return center_letter, is_center_letter, other_letters, is_other_letter
 
 # ==============================================================================
 
-def display_hexagon(center_letter, other_letters, fill):
+def display_hexagon(center_letter, other_letters, width):
     '''
         Display a hexagon containing the letters in the style of the NYT
         Input:
             center_letter   str 
             other_letters   str
-            fill            int     width of horizontal bars
+            width           int     width of horizontal bars
         Output:
             None
     '''
 
-    print( "\n" + fill*'-' )
+    cprint( '\n' + width*'-' + '\n', "yellow" )
 
     if len(center_letter) == 1 and len(other_letters) == 6:
 
         o = center_letter
         a,b,c,d,e,f = tuple(other_letters)
 
-        n = 4   # inset from left edge of terminal
+        inset = 4   # inset from left edge of terminal
 
         print(
-            f"\n\n{(n+2)*' '}{a}{3*' '}{b}\n\n"
-            + f"{n*' '}{c}{3*' '}{clr(o,'yellow')}{3*' '}{d}\n\n"
-            + f"{(n+2)*' '}{e}{3*' '}{f}\n"
+            f"\n{(inset+2)*' '}{a}{3*' '}{b}\n\n"
+            + f"{inset*' '}{c}{3*' '}{clr(o,"yellow")}{3*' '}{d}\n\n"
+            + f"{(inset+2)*' '}{e}{3*' '}{f}\n"
         )
+
+        cprint( '\n' + width*'-' + '\n', "yellow" )
 
 # ==============================================================================
 
-def find_words(center_letter, letters):
+def find_words(is_center_letter, is_other_letter):
     '''
         Find all words that are allowed by the given letters.
         Input:
-            center_letter   str     center letter that allowed words must 
-                                    contain
-            other_letters   str     other letters that words must be written 
-                                    with
+            is_center_letter    dict
+            is_other_letter     dict
         Output:
-            words           list    list of all allowed words in the Collins
-                                    Scrabble Dictionary
+            words               list    list of all allowed words in the Collins
+                                        Scrabble Dictionary
     '''   
 
     words = []
@@ -162,7 +181,7 @@ def find_words(center_letter, letters):
 
             word = line.rstrip()
 
-            if word_allowed(word, center_letter, letters):
+            if is_word_allowed(word, is_center_letter, is_other_letter):
 
                 words.append(word)
 
@@ -170,18 +189,18 @@ def find_words(center_letter, letters):
 
 # ==============================================================================
 
-def word_allowed(word, center_letter, other_letters):
+def is_word_allowed(word, is_center_letter, is_other_letter):
     '''
         Check wether a given word 
          - is at least 4 letters long;
          - can be written using the given letters;
          - contains the center letter at least once.
         Input:
-            word            str     word to check
-            center_letter   str     center letter that word must contain
-            other_letters   str     other letters that word must be written with
+            word                str     word to check
+            is_center_letter    dict   
+            other_letters       dict
         Output:
-            word_allowed    bool    wether the word is allowed
+            word_allowed        bool  
     '''
 
     if len(word) < 4: return False 
@@ -190,31 +209,31 @@ def word_allowed(word, center_letter, other_letters):
 
     for letter in word: 
 
-        if letter in center_letter: 
+        if is_center_letter[letter]: 
             
             contains_center_letter = True
             continue
 
-        if not letter in other_letters: return False
+        if not is_other_letter[letter]: return False
         
     return contains_center_letter
 
 # ==============================================================================
 
-def print_words(words, center_letter, other_letters, fill):
+def print_words(words, is_center_letter, other_letters, width):
     '''
         Display all found words, with the center letter and pangrams highlighted 
         in yellow.
         Input:
-            words           list    list of found words
-            center_letter   str     
-            other_letters   str  
-            fill            int     width of horizontal bars   
+            words               list    list of found words
+            is_center_letter    dict    
+            other_letters       str  
+            width               int     width of horizontal bars   
         Output:
             None
     '''
 
-    print( "\n" + fill*'-' + '\n' )
+    if len(words) == 0: print("No words found.")
 
     for word in words: 
 
@@ -222,31 +241,29 @@ def print_words(words, center_letter, other_letters, fill):
 
         for letter in other_letters:
 
-            if (
-                letter not in word
-            ): 
+            if letter not in word: 
                 pangram = False
                 break
 
         if pangram: 
             
-            print(clr(word, 'yellow'))
+            cprint(word, "yellow", attrs=["blink"])
             continue
         
         for letter in word:
 
-            if letter in center_letter: print(clr(letter, 'yellow'), end='')
-            else:                       print(letter, end='')
+            if is_center_letter[letter]: print(clr(letter, "yellow"), end='')
+            else:                        print(letter, end='')
 
         print('')
 
-    print( "\n" + fill*'=' + '\n' )
+    cprint( '\n' + width*'-' + '\n', "yellow" )
 
 # ==============================================================================
 
-def write_words(words, center_letter, other_letters):
+def write_words(words, center_letter, other_letters, width):
     '''
-        Write the found words to a .txt file.
+        At the user's request, the found words are saved to a .txt file.
         Input:
             words           list
             center_letter   str
@@ -255,34 +272,47 @@ def write_words(words, center_letter, other_letters):
             None
     '''
 
-    date = datetime.datetime.today().strftime("%Y-%m-%d")
+    write = ( input("Save solution? (y/n) ").lower() == 'y' )
 
-    with open(f"spelling_bee_{date}.txt", "w") as file:
+    if write: 
+
+        date = datetime.datetime.today().strftime("%Y-%m-%d")
+
+        with open(f"spelling_bee_{date}.txt", "w") as file:
                     
-        file.write(f"center_letter {center_letter}")
+            file.write(f"center letter: {center_letter}")
         
-        file.write(f"\nother_letters {other_letters}")
-        
-        for word in words: file.write(f"\n{word}")
+            file.write(f"\nother letters: {other_letters}")
+
+            if len(words) > 0: 
+
+                file.write(f"\n{len(words)} words found")
+                
+                for word in words: file.write(f"\n{word}")
+
+            else: file.write(f"\nNo words found")
+
+    cprint( '\n' + width*'=' + '\n', "yellow" )
 
 # ==============================================================================
 # ==============================================================================
 
 def main():
 
-    fill = 50
+    width= 50
 
-    print_header(fill)
+    print_header(width)
 
-    center_letter, other_letters = user_input()
+    center_letter, is_center_letter, other_letters, is_other_letter = (
+        user_input() )
 
-    display_hexagon(center_letter, other_letters, fill)
+    display_hexagon(center_letter, other_letters, width)
 
-    words = find_words(center_letter, other_letters)
+    words = find_words(is_center_letter, is_other_letter)
 
-    print_words(words, center_letter, other_letters, fill)
+    print_words(words, is_center_letter, other_letters, width)
 
-    write_words(words, center_letter, other_letters)
+    write_words(words, center_letter, other_letters, width)
 
 # ==============================================================================    
 

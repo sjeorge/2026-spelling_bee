@@ -1,5 +1,5 @@
 center_letter T
-other_letters IAFCRD
+other_letters IAFDRC
 AARTI
 ACRATIC
 ACTA
